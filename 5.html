@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>행동활성화(BA) 셀프 모니터링 워크북</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Inter & Noto Sans KR) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc;
+        }
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 6px;
+        }
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen pb-12">
+
+    <!-- Header / Navbar -->
+    <header class="bg-teal-700 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-2 rounded-lg">
+                    <i class="fa-solid fa-seedling text-2xl text-teal-200"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold">행동활성화(BA) 셀프 워크북</h1>
+                    <p class="text-xs text-teal-100">의욕보다 행동이 먼저! 감정을 바꾸는 스몰 스텝</p>
+                </div>
+            </div>
+            <!-- Auto-save Status & Reset Button -->
+            <div class="flex items-center gap-3 text-sm">
+                <span id="saveStatus" class="bg-teal-800 text-teal-200 text-xs px-3 py-1 rounded-full flex items-center gap-1">
+                    <i class="fa-solid fa-circle-check text-teal-400"></i> 자동 저장됨
+                </span>
+                <button onclick="confirmResetCurrentWeek()" class="text-xs bg-amber-500/80 hover:bg-amber-600 text-white px-3 py-1 rounded-md transition flex items-center gap-1">
+                    <i class="fa-solid fa-rotate-right"></i> 현재 주차 초기화
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 mt-6 space-y-8">
+
+        <!-- Week Selector & Management Bar (2026.11.02 ~ 2027.12.31) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+                <div class="bg-teal-100 text-teal-800 p-2 rounded-lg font-bold text-sm shrink-0">
+                    <i class="fa-solid fa-calendar-days mr-1"></i> 주차 및 날짜 선택
+                </div>
+                <select id="weekSelect" onchange="changeWeek(parseInt(this.value))" class="p-2 border border-slate-300 rounded-lg text-xs font-bold text-teal-900 bg-slate-50 focus:outline-teal-500 cursor-pointer flex-1 sm:w-96">
+                    <!-- Dynamic Options JS -->
+                </select>
+            </div>
+            
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button onclick="prevWeek()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+                    <i class="fa-solid fa-chevron-left"></i> 이전 주
+                </button>
+                <button onclick="nextWeek()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+                    다음 주 <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Banner Quote -->
+        <div class="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 rounded-xl p-4 text-teal-900 shadow-sm flex items-center gap-4">
+            <i class="fa-solid fa-quote-left text-3xl text-teal-400 opacity-60"></i>
+            <div>
+                <p class="font-medium">"기분이 좋아져서 움직이는 것이 아닙니다. 아주 작게 움직였기 때문에 뇌의 보상체계가 활성화되고 기분이 따라오는 것입니다."</p>
+                <p class="text-xs text-teal-600 mt-1">― 행동활성화(Behavioral Activation) 핵심 원리</p>
+            </div>
+        </div>
+
+        <!-- SECTION 1 & 2: 행동계약서 (가치 & 쪼개기) -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-800 text-white px-6 py-4 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="bg-teal-500 text-xs font-bold px-2.5 py-1 rounded-full">STEP 1 & 2</span>
+                    <h2 class="text-lg font-bold">
+                        <span id="sectionWeekTitle">1주차</span> 행동 계약서 
+                        <span id="sectionDateRange" class="text-teal-300 font-normal text-sm ml-1"></span>
+                    </h2>
+                </div>
+                <span class="text-xs text-slate-300"><i class="fa-solid fa-pen-to-square"></i> 내용 수정 가능</span>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <!-- 1. 가치찾기 & 전념행동 -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-base font-bold text-teal-700 flex items-center gap-2">
+                            <i class="fa-solid fa-compass"></i> 1. 가치 찾기 및 전념 행동 만들기
+                        </h3>
+                        <button onclick="addValueCard()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> 가치 항목 추가
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4">내가 소중하게 생각하는 가치 영역을 자유롭게 추가하고, 실천 전념 행동을 적어보세요.</p>
+                    
+                    <div id="valuesContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Dynamic Cards JS -->
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- 2. 행동 쪼개기 & 기계적 실천 계약 -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-base font-bold text-teal-700 flex items-center gap-2">
+                            <i class="fa-solid fa-scissors"></i> 2. 마이크로 스텝 (행동 쪼개기) & 계약
+                        </h3>
+                        <button onclick="addContractRow()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> 마이크로 스텝 추가
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4">전념 행동을 <b>"실패하기가 더 어려울 정도"</b>로 잘게 쪼개어 계약 항목을 추가해 보세요.</p>
+
+                    <div id="contractsContainer" class="space-y-4">
+                        <!-- Dynamic Contract Rows JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: 셀프 모니터링 일지 (주간) -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-teal-800 text-white px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="bg-teal-500 text-xs font-bold px-2.5 py-1 rounded-full">STEP 3</span>
+                    <h2 class="text-lg font-bold">
+                        <span id="diaryWeekTitle">1주차</span> 셀프 모니터링 일지
+                        <span id="diaryDateRange" class="text-teal-200 font-normal text-sm ml-1"></span>
+                    </h2>
+                </div>
+                <span class="text-xs text-teal-200">기분/즐거움/성취감 점수: 0점(없음) ~ 10점(최상)</span>
+            </div>
+
+            <div class="p-4 sm:p-6">
+                <div class="flex justify-between items-center mb-4 text-xs">
+                    <span class="text-slate-500 font-medium">* 자유롭게 일지 행을 추가/삭제하며 기록하세요.</span>
+                    <button onclick="addDiaryRow()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-plus"></i> 일지 행 추가하기
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse min-w-[768px]">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
+                                <th class="p-2.5 w-24 text-center">요일/날짜</th>
+                                <th class="p-2.5 w-20 text-center">시간</th>
+                                <th class="p-2.5 min-w-[160px]">실천한 행동 (작게 쪼갠 것)</th>
+                                <th class="p-2.5 w-16 text-center">실행</th>
+                                <th class="p-2.5 w-16 text-center">전 기분</th>
+                                <th class="p-2.5 w-16 text-center">후 즐거움</th>
+                                <th class="p-2.5 w-16 text-center">후 성취감</th>
+                                <th class="p-2.5 min-w-[180px]">비고 (TRAP 탈출/칭찬/보상)</th>
+                                <th class="p-2.5 w-12 text-center">삭제</th>
+                            </tr>
+                        </thead>
+                        <tbody id="diaryTableBody" class="divide-y divide-slate-100">
+                            <!-- Dynamic Rows JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: 주간 검토 및 피드백 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-800 text-white px-6 py-4 flex items-center gap-2 flex-wrap">
+                <span class="bg-teal-500 text-xs font-bold px-2.5 py-1 rounded-full">STEP 4</span>
+                <h2 class="text-lg font-bold">
+                    <span id="reviewWeekTitle">1주차</span> 주간 검토 & 피드백
+                    <span id="reviewDateRange" class="text-teal-300 font-normal text-sm ml-1"></span>
+                </h2>
+            </div>
+            
+            <div class="p-6 space-y-4 text-xs">
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">
+                        <i class="fa-solid fa-sparkles text-amber-500 mr-1"></i> 1. 이번 주 내가 얻은 작지만 소중한 변화
+                    </label>
+                    <textarea id="rev_pos" oninput="saveCurrentWeekData()" rows="2" placeholder="누워있을 때보다 행동했을 때 기분/성취감 점수가 아주 조금이라도 높았던 순간이나 변화를 적어보세요." class="w-full p-3 border border-slate-200 rounded-lg focus:outline-teal-500"></textarea>
+                </div>
+
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">
+                        <i class="fa-solid fa-wrench text-teal-600 mr-1"></i> 2. 실패했거나 무기력했던 순간 피드백 (자책 금지 🚫)
+                    </label>
+                    <textarea id="rev_mod" oninput="saveCurrentWeekData()" rows="2" placeholder="실행하지 못했다면 행동의 크기가 너무 컸을 수 있습니다. 다음 주에는 어떻게 반으로 더 쪼갤 수 있을까요?" class="w-full p-3 border border-slate-200 rounded-lg focus:outline-teal-500"></textarea>
+                </div>
+
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">
+                        <i class="fa-solid fa-gift text-pink-500 mr-1"></i> 3. 나를 위한 칭찬 및 보상 한 마디
+                    </label>
+                    <textarea id="rev_rew" oninput="saveCurrentWeekData()" rows="2" placeholder="작은 실천이라도 시도한 나 자신에게 해주고 싶은 칭찬이나 보상을 적어보세요." class="w-full p-3 border border-slate-200 rounded-lg focus:outline-teal-500"></textarea>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Modal -->
+    <div id="customModal" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4">
+            <h3 id="modalTitle" class="text-base font-bold text-slate-800"></h3>
+            <p id="modalMessage" class="text-xs text-slate-600 leading-relaxed"></p>
+            <div id="modalButtons" class="flex justify-end gap-2 pt-2"></div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Global State & Date Logic
+        let currentWeek = 1;
+        const totalWeeks = 61; // 2026.11.02 ~ 2027.12.31
+        const startDate = new Date(2026, 10, 2); // Month is 0-indexed (10 = Nov)
+
+        // Helper to format Date -> YYYY.MM.DD(Day)
+        function formatDate(d) {
+            const year = d.getFullYear();
+            const month = d.getMonth() + 1;
+            const date = d.getDate();
+            const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+            const dayStr = dayNames[d.getDay()];
+            return `${year}.${month}.${date}(${dayStr})`;
+        }
+
+        // Get Date Range String for Week Index (1 ~ 61)
+        function getWeekDateRange(weekIndex) {
+            const weekStart = new Date(startDate);
+            weekStart.setDate(startDate.getDate() + (weekIndex - 1) * 7);
+            
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            const absoluteMaxEnd = new Date(2027, 11, 31);
+            if (weekEnd > absoluteMaxEnd) {
+                weekEnd.setTime(absoluteMaxEnd.getTime());
+            }
+
+            return `${formatDate(weekStart)} ~ ${formatDate(weekEnd)}`;
+        }
+
+        // Initialize Options in Select Box
+        function initWeekOptions() {
+            const select = document.getElementById('weekSelect');
+            select.innerHTML = '';
+            for (let i = 1; i <= totalWeeks; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `${i}주차 (${getWeekDateRange(i)})`;
+                select.appendChild(option);
+            }
+        }
+
+        // Load & Render Current Week Data
+        function loadWeekData(weekIndex) {
+            currentWeek = weekIndex;
+            document.getElementById('weekSelect').value = weekIndex;
+            
+            const dateStr = `(${getWeekDateRange(weekIndex)})`;
+            document.getElementById('sectionWeekTitle').textContent = `${weekIndex}주차`;
+            document.getElementById('sectionDateRange').textContent = dateStr;
+            
+            document.getElementById('diaryWeekTitle').textContent = `${weekIndex}주차`;
+            document.getElementById('diaryDateRange').textContent = dateStr;
+            
+            document.getElementById('reviewWeekTitle').textContent = `${weekIndex}주차`;
+            document.getElementById('reviewDateRange').textContent = dateStr;
+
+            const saved = localStorage.getItem(`ba_workbook_week_${weekIndex}`);
+            let data = saved ? JSON.parse(saved) : null;
+
+            if (!data) {
+                // Default Initial Data
+                data = {
+                    values: [
+                        { checked: true, name: '나 (건강, 휴식, 평온)', detail: '몸과 마음을 사소한 스트레스로부터 보호하고 평온함 구하기' },
+                        { checked: false, name: '소중한 일 (배움, 자기계발)', detail: '매일 조금씩 성장의 기쁨을 경험하기' },
+                        { checked: false, name: '관계 (가족, 친구)', detail: '소중한 사람들과 작게나마 따뜻한 마음 주고받기' }
+                    ],
+                    contracts: [
+                        { target: '방 청소하기', step: '책상 위 영수증 1개 버리기', time: '오전 10시 알람 울릴 때', place: '방 책상', mins: 5 },
+                        { target: '30분 스트레칭 운동', step: '운동화 끈 묶고 현관에 1분 서 있기', time: '점심 식사 직후', place: '거실', mins: 3 }
+                    ],
+                    diary: [
+                        { day: '월', time: '10:00', act: '책상 위 영수증 1개 버리기', done: true, b_mood: 3, a_pleasure: 5, a_mastery: 6, note: '귀찮았지만 하고 나니 깨끗해져서 기분 상승' },
+                        { day: '화', time: '14:00', act: '창문 열고 바깥 공기 3분 마시기', done: true, b_mood: 2, a_pleasure: 6, a_mastery: 5, note: 'TRAP 탈출 성공! 머리가 맑아짐' }
+                    ],
+                    rev_pos: '',
+                    rev_mod: '',
+                    rev_rew: ''
+                };
+            }
+
+            renderValues(data.values || []);
+            renderContracts(data.contracts || []);
+            renderDiary(data.diary || []);
+            
+            document.getElementById('rev_pos').value = data.rev_pos || '';
+            document.getElementById('rev_mod').value = data.rev_mod || '';
+            document.getElementById('rev_rew').value = data.rev_rew || '';
+        }
+
+        // Save Current Week Data to LocalStorage
+        function saveCurrentWeekData() {
+            const values = [];
+            document.querySelectorAll('.val-card').forEach(card => {
+                values.push({
+                    checked: card.querySelector('.val-check').checked,
+                    name: card.querySelector('.val-name').value,
+                    detail: card.querySelector('.val-detail').value
+                });
+            });
+
+            const contracts = [];
+            document.querySelectorAll('.con-row').forEach(row => {
+                contracts.push({
+                    target: row.querySelector('.con-target').value,
+                    step: row.querySelector('.con-step').value,
+                    time: row.querySelector('.con-time').value,
+                    place: row.querySelector('.con-place').value,
+                    mins: row.querySelector('.con-mins').value
+                });
+            });
+
+            const diary = [];
+            document.querySelectorAll('.diary-row').forEach(row => {
+                diary.push({
+                    day: row.querySelector('.d-day').value,
+                    time: row.querySelector('.d-time').value,
+                    act: row.querySelector('.d-act').value,
+                    done: row.querySelector('.d-done').checked,
+                    b_mood: row.querySelector('.d-bmood').value,
+                    a_pleasure: row.querySelector('.d-apleasure').value,
+                    a_mastery: row.querySelector('.d-amastery').value,
+                    note: row.querySelector('.d-note').value
+                });
+            });
+
+            const data = {
+                values,
+                contracts,
+                diary,
+                rev_pos: document.getElementById('rev_pos').value,
+                rev_mod: document.getElementById('rev_mod').value,
+                rev_rew: document.getElementById('rev_rew').value
+            };
+
+            localStorage.setItem(`ba_workbook_week_${currentWeek}`, JSON.stringify(data));
+            
+            const status = document.getElementById('saveStatus');
+            status.innerHTML = `<i class="fa-solid fa-circle-check text-teal-400"></i> 저장 완료`;
+            setTimeout(() => {
+                status.innerHTML = `<i class="fa-solid fa-circle-check text-teal-400"></i> 자동 저장됨`;
+            }, 1500);
+        }
+
+        // --- Render UI Elements ---
+        function renderValues(list) {
+            const container = document.getElementById('valuesContainer');
+            container.innerHTML = '';
+            list.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = 'val-card border border-slate-200 rounded-xl p-4 bg-slate-50 relative group space-y-2';
+                div.innerHTML = `
+                    <button onclick="removeValueCard(${idx})" class="absolute top-2 right-2 text-slate-400 hover:text-rose-500 text-xs p-1 transition">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="saveCurrentWeekData()" class="val-check accent-teal-600 w-4 h-4 cursor-pointer">
+                        <input type="text" value="${escapeHtml(item.name)}" oninput="saveCurrentWeekData()" placeholder="가치 영역 이름 (예: 나, 가족)" class="val-name font-bold text-xs text-slate-800 bg-transparent border-b border-dashed border-slate-300 focus:border-teal-500 focus:outline-none w-full">
+                    </div>
+                    <textarea oninput="saveCurrentWeekData()" placeholder="이 가치를 표현하는 세부 내용" class="val-detail w-full text-xs p-2 bg-white border border-slate-200 rounded focus:outline-teal-500 h-16 resize-none">${escapeHtml(item.detail)}</textarea>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function addValueCard() {
+            const container = document.getElementById('valuesContainer');
+            const idx = container.querySelectorAll('.val-card').length;
+            const div = document.createElement('div');
+            div.className = 'val-card border border-slate-200 rounded-xl p-4 bg-slate-50 relative group space-y-2';
+            div.innerHTML = `
+                <button onclick="removeValueCard(${idx})" class="absolute top-2 right-2 text-slate-400 hover:text-rose-500 text-xs p-1 transition">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" onchange="saveCurrentWeekData()" class="val-check accent-teal-600 w-4 h-4 cursor-pointer">
+                    <input type="text" value="" oninput="saveCurrentWeekData()" placeholder="새로운 가치 영역" class="val-name font-bold text-xs text-slate-800 bg-transparent border-b border-dashed border-slate-300 focus:border-teal-500 focus:outline-none w-full">
+                </div>
+                <textarea oninput="saveCurrentWeekData()" placeholder="이 가치를 표현하는 세부 내용" class="val-detail w-full text-xs p-2 bg-white border border-slate-200 rounded focus:outline-teal-500 h-16 resize-none"></textarea>
+            `;
+            container.appendChild(div);
+            saveCurrentWeekData();
+        }
+
+        function removeValueCard(index) {
+            const cards = document.querySelectorAll('.val-card');
+            if (cards[index]) cards[index].remove();
+            saveCurrentWeekData();
+        }
+
+        function renderContracts(list) {
+            const container = document.getElementById('contractsContainer');
+            container.innerHTML = '';
+            list.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = 'con-row border border-emerald-200 bg-emerald-50/50 rounded-xl p-4 relative space-y-3';
+                div.innerHTML = `
+                    <button onclick="removeContractRow(${idx})" class="absolute top-2 right-2 text-slate-400 hover:text-rose-500 text-xs p-1 transition">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <label class="font-bold text-slate-600">원래 목표 행동</label>
+                            <input type="text" value="${escapeHtml(item.target)}" oninput="saveCurrentWeekData()" placeholder="예: 30분 운동하기" class="con-target w-full mt-1 p-2 border border-slate-200 rounded bg-white focus:outline-teal-500">
+                        </div>
+                        <div>
+                            <label class="font-bold text-emerald-700">➡️ 마이크로 스텝 (실패 불가능하게 쪼갠 행동)</label>
+                            <input type="text" value="${escapeHtml(item.step)}" oninput="saveCurrentWeekData()" placeholder="예: 운동화 끈 묶고 1분 서 있기" class="con-step w-full mt-1 p-2 border border-emerald-300 rounded bg-white font-semibold text-emerald-900 focus:outline-emerald-500">
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-slate-700 pt-1 border-t border-emerald-100">
+                        <span class="font-bold text-slate-500"><i class="fa-solid fa-file-contract"></i> 실천 계약:</span>
+                        <span>알람/계기(언제)</span>
+                        <input type="text" value="${escapeHtml(item.time)}" oninput="saveCurrentWeekData()" placeholder="예: 10:00 알람" class="con-time p-1 border border-slate-200 rounded w-28 bg-white">
+                        <span>장소(어디서)</span>
+                        <input type="text" value="${escapeHtml(item.place)}" oninput="saveCurrentWeekData()" placeholder="예: 내 방" class="con-place p-1 border border-slate-200 rounded w-24 bg-white">
+                        <span>기계적 실행</span>
+                        <input type="number" value="${item.mins}" oninput="saveCurrentWeekData()" class="con-mins p-1 border border-slate-200 rounded w-14 text-center bg-white">
+                        <span>분 동안 몸 움직이기</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function addContractRow() {
+            const container = document.getElementById('contractsContainer');
+            const idx = container.querySelectorAll('.con-row').length;
+            const div = document.createElement('div');
+            div.className = 'con-row border border-emerald-200 bg-emerald-50/50 rounded-xl p-4 relative space-y-3';
+            div.innerHTML = `
+                <button onclick="removeContractRow(${idx})" class="absolute top-2 right-2 text-slate-400 hover:text-rose-500 text-xs p-1 transition">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <label class="font-bold text-slate-600">원래 목표 행동</label>
+                        <input type="text" value="" oninput="saveCurrentWeekData()" placeholder="원래 하려던 목표" class="con-target w-full mt-1 p-2 border border-slate-200 rounded bg-white focus:outline-teal-500">
+                    </div>
+                    <div>
+                        <label class="font-bold text-emerald-700">➡️ 마이크로 스텝 (실패 불가능하게 쪼갠 행동)</label>
+                        <input type="text" value="" oninput="saveCurrentWeekData()" placeholder="실패하기 어려울 정도로 작게 쪼갠 행동" class="con-step w-full mt-1 p-2 border border-emerald-300 rounded bg-white font-semibold text-emerald-900 focus:outline-emerald-500">
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 text-xs text-slate-700 pt-1 border-t border-emerald-100">
+                    <span class="font-bold text-slate-500"><i class="fa-solid fa-file-contract"></i> 실천 계약:</span>
+                    <span>알람/계기</span>
+                    <input type="text" value="" oninput="saveCurrentWeekData()" placeholder="언제" class="con-time p-1 border border-slate-200 rounded w-28 bg-white">
+                    <span>장소</span>
+                    <input type="text" value="" oninput="saveCurrentWeekData()" placeholder="어디서" class="con-place p-1 border border-slate-200 rounded w-24 bg-white">
+                    <span>기계적 실행</span>
+                    <input type="number" value="5" oninput="saveCurrentWeekData()" class="con-mins p-1 border border-slate-200 rounded w-14 text-center bg-white">
+                    <span>분 동안 몸 움직이기</span>
+                </div>
+            `;
+            container.appendChild(div);
+            saveCurrentWeekData();
+        }
+
+        function removeContractRow(index) {
+            const rows = document.querySelectorAll('.con-row');
+            if (rows[index]) rows[index].remove();
+            saveCurrentWeekData();
+        }
+
+        function renderDiary(list) {
+            const tbody = document.getElementById('diaryTableBody');
+            tbody.innerHTML = '';
+            list.forEach((item, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'diary-row hover:bg-slate-50 transition';
+                tr.innerHTML = `
+                    <td class="p-2 text-center">
+                        <select onchange="saveCurrentWeekData()" class="d-day p-1 border border-slate-200 rounded bg-white w-full text-center">
+                            ${['월','화','수','목','금','토','일'].map(d => `<option value="${d}" ${item.day === d ? 'selected' : ''}>${d}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="text" value="${escapeHtml(item.time)}" oninput="saveCurrentWeekData()" placeholder="10:00" class="d-time p-1 border border-slate-200 rounded w-full text-center">
+                    </td>
+                    <td class="p-2">
+                        <input type="text" value="${escapeHtml(item.act)}" oninput="saveCurrentWeekData()" placeholder="실천한 스몰 스텝" class="d-act p-1 border border-slate-200 rounded w-full">
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="saveCurrentWeekData()" class="d-done accent-teal-600 w-4 h-4 cursor-pointer">
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="number" min="0" max="10" value="${item.b_mood}" oninput="saveCurrentWeekData()" class="d-bmood p-1 border border-slate-200 rounded w-12 text-center">
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="number" min="0" max="10" value="${item.a_pleasure}" oninput="saveCurrentWeekData()" class="d-apleasure p-1 border border-slate-200 rounded w-12 text-center font-bold text-teal-700">
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="number" min="0" max="10" value="${item.a_mastery}" oninput="saveCurrentWeekData()" class="d-amastery p-1 border border-slate-200 rounded w-12 text-center font-bold text-emerald-700">
+                    </td>
+                    <td class="p-2">
+                        <input type="text" value="${escapeHtml(item.note)}" oninput="saveCurrentWeekData()" placeholder="기분 변화, TRAP 알아차림 등" class="d-note p-1 border border-slate-200 rounded w-full">
+                    </td>
+                    <td class="p-2 text-center">
+                        <button onclick="removeDiaryRow(${idx})" class="text-slate-400 hover:text-rose-500 p-1">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function addDiaryRow() {
+            const tbody = document.getElementById('diaryTableBody');
+            const idx = tbody.querySelectorAll('.diary-row').length;
+            const tr = document.createElement('tr');
+            tr.className = 'diary-row hover:bg-slate-50 transition';
+            tr.innerHTML = `
+                <td class="p-2 text-center">
+                    <select onchange="saveCurrentWeekData()" class="d-day p-1 border border-slate-200 rounded bg-white w-full text-center">
+                        ${['월','화','수','목','금','토','일'].map(d => `<option value="${d}">${d}</option>`).join('')}
+                    </select>
+                </td>
+                <td class="p-2 text-center">
+                    <input type="text" value="" oninput="saveCurrentWeekData()" placeholder="12:00" class="d-time p-1 border border-slate-200 rounded w-full text-center">
+                </td>
+                <td class="p-2">
+                    <input type="text" value="" oninput="saveCurrentWeekData()" placeholder="작게 쪼갠 행동" class="d-act p-1 border border-slate-200 rounded w-full">
+                </td>
+                <td class="p-2 text-center">
+                    <input type="checkbox" onchange="saveCurrentWeekData()" class="d-done accent-teal-600 w-4 h-4 cursor-pointer">
+                </td>
+                <td class="p-2 text-center">
+                    <input type="number" min="0" max="10" value="0" oninput="saveCurrentWeekData()" class="d-bmood p-1 border border-slate-200 rounded w-12 text-center">
+                </td>
+                <td class="p-2 text-center">
+                    <input type="number" min="0" max="10" value="0" oninput="saveCurrentWeekData()" class="d-apleasure p-1 border border-slate-200 rounded w-12 text-center font-bold text-teal-700">
+                </td>
+                <td class="p-2 text-center">
+                    <input type="number" min="0" max="10" value="0" oninput="saveCurrentWeekData()" class="d-amastery p-1 border border-slate-200 rounded w-12 text-center font-bold text-emerald-700">
+                </td>
+                <td class="p-2">
+                    <input type="text" value="" oninput="saveCurrentWeekData()" placeholder="비고 및 칭찬" class="d-note p-1 border border-slate-200 rounded w-full">
+                </td>
+                <td class="p-2 text-center">
+                    <button onclick="removeDiaryRow(${idx})" class="text-slate-400 hover:text-rose-500 p-1">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            saveCurrentWeekData();
+        }
+
+        function removeDiaryRow(index) {
+            const rows = document.querySelectorAll('.diary-row');
+            if (rows[index]) rows[index].remove();
+            saveCurrentWeekData();
+        }
+
+        // --- Navigation ---
+        function changeWeek(w) {
+            loadWeekData(w);
+        }
+
+        function prevWeek() {
+            if (currentWeek > 1) {
+                changeWeek(currentWeek - 1);
+            }
+        }
+
+        function nextWeek() {
+            if (currentWeek < totalWeeks) {
+                changeWeek(currentWeek + 1);
+            }
+        }
+
+        function confirmResetCurrentWeek() {
+            showModal(
+                `${currentWeek}주차 초기화`,
+                `정말로 ${currentWeek}주차의 모든 작성 내용을 초기화하시겠습니까?`,
+                [
+                    { text: '취소', class: 'bg-slate-200 text-slate-700 hover:bg-slate-300', onclick: closeModal },
+                    { text: '초기화', class: 'bg-amber-600 text-white hover:bg-amber-700', onclick: () => {
+                        localStorage.removeItem(`ba_workbook_week_${currentWeek}`);
+                        loadWeekData(currentWeek);
+                        closeModal();
+                    }}
+                ]
+            );
+        }
+
+        // --- Custom Modal Helper ---
+        function showModal(title, msg, buttons) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = msg;
+            const btnBox = document.getElementById('modalButtons');
+            btnBox.innerHTML = '';
+            buttons.forEach(b => {
+                const btn = document.createElement('button');
+                btn.className = `px-3 py-1.5 rounded-lg text-xs font-semibold transition ${b.class}`;
+                btn.textContent = b.text;
+                btn.onclick = b.onclick;
+                btnBox.appendChild(btn);
+            });
+            document.getElementById('customModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('customModal').classList.add('hidden');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;")
+                      .replace(/'/g, "&#039;");
+        }
+
+        // Window Load Initialization
+        window.onload = function() {
+            initWeekOptions();
+            loadWeekData(1);
+        };
+    </script>
+</body>
+</html>
